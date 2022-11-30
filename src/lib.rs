@@ -52,7 +52,8 @@ pub mod vignere {
 
     impl Vignere {
         pub fn new(key: &str) -> anyhow::Result<Self> {
-            check_alphabetic(key)?;
+            let key = key.to_lowercase();
+            check_alphabetic(&key)?;
             Ok(Self {
                 key: key.to_string(),
             })
@@ -61,13 +62,14 @@ pub mod vignere {
         // This function returns the encrypted text
         // Ci = (Ki + Pi) % 26
         pub fn encrypt(&self, plaintext: &str) -> anyhow::Result<String> {
-            check_alphabetic(plaintext);
+            let plaintext = plaintext.to_lowercase();
+            check_alphabetic(&plaintext)?;
             let keystream = generate_key(&self.key, plaintext.len());
             let keystream = keystream.to_lowercase();
-            let plaintext = plaintext.to_lowercase();
             let keystream = keystream.as_bytes();
 
             let mut cipher_vec: Vec<char> = vec![];
+            // iterate over the ciphertext by characters
             for (i, p_i) in plaintext.chars().enumerate() {
                 let k_i: u32 = encode_char(keystream[i % keystream.len()] as char);
                 let p_i: u32 = encode_char(p_i);
@@ -82,14 +84,15 @@ pub mod vignere {
         // This function returns the original text
         // Pi = (Ci - Ki) % 26
         pub fn decrypt(&self, ciphertext: &str) -> anyhow::Result<String> {
-            check_alphabetic(&ciphertext);
+            let ciphertext = ciphertext.to_lowercase();
+            check_alphabetic(&ciphertext)?;
             let keystream = generate_key(&self.key, ciphertext.len());
             let keystream = keystream.to_lowercase();
-            let ciphertext = ciphertext.to_lowercase();
 
             let keystream = keystream.as_bytes();
 
             let mut plaintext_vec: Vec<char> = vec![];
+            // iterate over the ciphertext by characters
             for (i, c_i) in ciphertext.chars().enumerate() {
                 let k_i: u32 = encode_char(keystream[i % keystream.len()] as char);
                 let c_i: u32 = encode_char(c_i);
