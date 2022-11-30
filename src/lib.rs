@@ -149,16 +149,6 @@ pub mod vignere {
 
 use vignere::Vignere;
 
-fn main() {
-    let key = "CRYPTO";
-    let msg = "HELLOWORLD";
-    let v = Vignere::new(&key).unwrap();
-    let ciphertext = v.encrypt(&msg);
-    println!("Ciphertext: {}", ciphertext);
-    let plaintext = v.decrypt(&ciphertext);
-    println!("Plaintext: {}", plaintext);
-}
-
 // Key = cryptocryp
 // Plaintext = helloworld
 // Ciphertext = jvjahkqijs
