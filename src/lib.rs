@@ -27,9 +27,8 @@ pub mod vignere {
     // Check if a character is a letter
     // lowercase a..z
     fn check_alphabetic(s: &str) -> anyhow::Result<()> {
-        let copy: &str = &s.clone().to_lowercase();
-        for c in copy.chars() {
-            match c {
+        for c in s.chars() {
+            match c.to_ascii_lowercase() {
                 'a'..='z' => (),
                 _ => {
                     return Err(anyhow::anyhow!(
@@ -53,7 +52,7 @@ pub mod vignere {
 
     impl Vignere {
         pub fn new(key: &str) -> anyhow::Result<Self> {
-            check_alphabetic(&key)?;
+            check_alphabetic(key)?;
             Ok(Self {
                 key: key.to_string(),
             })
@@ -62,15 +61,15 @@ pub mod vignere {
         // This function returns the encrypted text
         // Ci = (Ki + Pi) % 26
         pub fn encrypt(&self, plaintext: &str) -> anyhow::Result<String> {
-            check_alphabetic(&plaintext);
-            let keysteam = generate_key(&self.key, plaintext.len());
-            let keysteam = keysteam.to_lowercase();
+            check_alphabetic(plaintext);
+            let keystream = generate_key(&self.key, plaintext.len());
+            let keystream = keystream.to_lowercase();
             let plaintext = plaintext.to_lowercase();
-            let keysteam = keysteam.as_bytes();
+            let keystream = keystream.as_bytes();
 
             let mut cipher_vec: Vec<char> = vec![];
             for (i, p_i) in plaintext.chars().enumerate() {
-                let k_i: u32 = encode_char(keysteam[i % keysteam.len()] as char);
+                let k_i: u32 = encode_char(keystream[i % keystream.len()] as char);
                 let p_i: u32 = encode_char(p_i);
                 let c_i = (k_i + p_i) % 26;
 
@@ -84,15 +83,15 @@ pub mod vignere {
         // Pi = (Ci - Ki) % 26
         pub fn decrypt(&self, ciphertext: &str) -> anyhow::Result<String> {
             check_alphabetic(&ciphertext);
-            let keysteam = generate_key(&self.key, ciphertext.len());
-            let keysteam = keysteam.to_lowercase();
+            let keystream = generate_key(&self.key, ciphertext.len());
+            let keystream = keystream.to_lowercase();
             let ciphertext = ciphertext.to_lowercase();
 
-            let keysteam = keysteam.as_bytes();
+            let keystream = keystream.as_bytes();
 
             let mut plaintext_vec: Vec<char> = vec![];
             for (i, c_i) in ciphertext.chars().enumerate() {
-                let k_i: u32 = encode_char(keysteam[i % keysteam.len()] as char);
+                let k_i: u32 = encode_char(keystream[i % keystream.len()] as char);
                 let c_i: u32 = encode_char(c_i);
                 // rem_euclid acts as a modulus operator when we have negative results.
                 let p_i = (c_i as i32 - k_i as i32).rem_euclid(26) as u32;
@@ -103,90 +102,122 @@ pub mod vignere {
             return Ok(plaintext_vec.into_iter().collect());
         }
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use vignere::Vignere;
+    #[cfg(test)]
+    mod tests {
+        use super::*;
 
-    #[test]
-    // Key = cryptocryp
-    // Plaintext = helloworld
-    // Ciphertext = jvjahkqijs
-    // +-----+------+------+------+------+------+------+------+------+------+------+
-    // | Key | c=2  | r=17 | y=24 | p=15 | t=19 | o=14 | c=2  | r=17 | y=24 | p=15 |
-    // | PT  | h=7  | e=4  | l=11 | l=11 | o=14 | w=22 | o=14 | r=17 | l=11 | d=3  |
-    // | CT  | 9=j  | 21=v | 9=j  | 0=a  | 7=h  | 10=k | 16=q | 8=i  | 9=j  | 18=s |
-    // +-----+------+------+------+------+------+------+------+------+------+------+
-    // 2 + 7 mod 26 = 9
-    // 17 + 4 mod 26 = 21
-    // 24 + 11 mod 26 = 9
-    // 15 + 11 mod 26 = 0
-    // 19 + 14 mod 26 = 7
-    // 14 + 22 mod 26 = 10
-    // 2 + 14 mod 26 = 16
-    // 17 + 17 mod 26 = 8
-    // 24 + 11 mod 26 = 9
-    // 15 + 3 mod 26 = 18
-    fn hello_world() {
-        let key = "CRYPTO";
-        let msg = "HELLOWORLD";
-        let v = Vignere::new(&key).unwrap();
-        let ciphertext = v.encrypt(&msg).unwrap();
-        assert_eq!(ciphertext, "jvjahkqijs");
-        let plaintext = v.decrypt(&ciphertext).unwrap();
-        assert_eq!(msg.to_lowercase(), plaintext);
-    }
+        #[test]
+        fn encode_char_test() {
+            assert_eq!(encode_char('a'), 0);
+            assert_eq!(encode_char('b'), 1);
+            assert_eq!(encode_char('z'), 25);
+        }
 
-    #[test]
-    fn attack_at_dawn() {
-        let key = "LEMON";
-        let msg = "ATTACKATDAWN";
-        let v = Vignere::new(&key).unwrap();
-        let ciphertext = v.encrypt(&msg).unwrap();
-        assert_eq!(ciphertext, "lxfopvefrnhr");
-        let plaintext = v.decrypt(&ciphertext).unwrap();
-        assert_eq!(msg.to_lowercase(), plaintext);
-    }
+        #[test]
+        fn decode_u32_test() {
+            assert_eq!(decode_u32(0), 'a');
+            assert_eq!(decode_u32(1), 'b');
+            assert_eq!(decode_u32(25), 'z');
+        }
 
-    #[test]
-    fn dont_tell_anyone() {
-        let key = "cat";
-        let msg = "donttellanyone";
-        let v = Vignere::new(&key).unwrap();
-        let ciphertext = v.encrypt(&msg).unwrap();
-        let plaintext = v.decrypt(&ciphertext).unwrap();
-        assert_eq!(msg, plaintext);
-    }
+        #[test]
+        fn check_alphabetic_test() {
+            assert!(check_alphabetic("abc").is_ok());
+            assert!(check_alphabetic("ABC").is_ok());
+            assert!(check_alphabetic("aBc").is_ok());
+            assert!(check_alphabetic("aBc123").is_err());
+            assert!(check_alphabetic("aBc!@#").is_err());
+        }
 
-    #[test]
-    fn really_long_text() {
-        let key = "secrets";
-        let msg = String::from("LoremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaborum").to_uppercase();
-        let v = Vignere::new(&key).unwrap();
-        let ciphertext = v.encrypt(&msg).unwrap();
-        let plaintext = v.decrypt(&ciphertext).unwrap();
-        assert_eq!(msg.to_lowercase(), plaintext);
-    }
+        #[test]
+        fn generate_key_test() {
+            assert_eq!(generate_key("abc", 10), "abcabcabca");
+            assert_eq!(generate_key("abc", 5), "abcab");
+            assert_eq!(generate_key("abc", 3), "abc");
+            assert_eq!(generate_key("abc", 2), "ab");
+            assert_eq!(generate_key("abc", 1), "a");
+            assert_eq!(generate_key("abc", 0), "");
+        }
 
-    #[test]
-    fn really_long_key() {
-        let key = "LoremipsummetconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaboru";
-        let msg = String::from("jpokmssrwjlazz").to_uppercase();
-        let v = Vignere::new(&key).unwrap();
-        let ciphertext = v.encrypt(&msg).unwrap();
-        let plaintext = v.decrypt(&ciphertext).unwrap();
-        assert_eq!(msg.to_lowercase(), plaintext);
-    }
+        #[test]
+        // Key = cryptocryp
+        // Plaintext = helloworld
+        // Ciphertext = jvjahkqijs
+        // +-----+------+------+------+------+------+------+------+------+------+------+
+        // | Key | c=2  | r=17 | y=24 | p=15 | t=19 | o=14 | c=2  | r=17 | y=24 | p=15 |
+        // | PT  | h=7  | e=4  | l=11 | l=11 | o=14 | w=22 | o=14 | r=17 | l=11 | d=3  |
+        // | CT  | 9=j  | 21=v | 9=j  | 0=a  | 7=h  | 10=k | 16=q | 8=i  | 9=j  | 18=s |
+        // +-----+------+------+------+------+------+------+------+------+------+------+
+        // 2 + 7 mod 26 = 9
+        // 17 + 4 mod 26 = 21
+        // 24 + 11 mod 26 = 9
+        // 15 + 11 mod 26 = 0
+        // 19 + 14 mod 26 = 7
+        // 14 + 22 mod 26 = 10
+        // 2 + 14 mod 26 = 16
+        // 17 + 17 mod 26 = 8
+        // 24 + 11 mod 26 = 9
+        // 15 + 3 mod 26 = 18
+        fn hello_world() {
+            let key = "CRYPTO";
+            let msg = "HELLOWORLD";
+            let v = Vignere::new(&key).unwrap();
+            let ciphertext = v.encrypt(&msg).unwrap();
+            assert_eq!(ciphertext, "jvjahkqijs");
+            let plaintext = v.decrypt(&ciphertext).unwrap();
+            assert_eq!(msg.to_lowercase(), plaintext);
+        }
 
-    #[test]
-    fn really_long_text_and_key() {
-        let key = "LoremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaborum";
-        let msg = String::from("rxfqgfmijapvfrahyvjbkrvrlngwdrqqsjzilbfdwhuhphtlphrbqsxaxsdivxmbhknvridnlxxvgorbhjaabdxcjridczqsumctefntukkvsjvmbikplirqtresjtyvhtkytcjzmcvcwbyufbmnwmrxzviyyjjxvecqpqkrzxnigycqjjvbxdmeqdjpipvdzcgeyenopfpnzsxzkhtdnlctonqlellwdhpsijfrukoqcrkxmwjpokmssrwjlazz").to_uppercase();
-        let v = Vignere::new(&key).unwrap();
-        let ciphertext = v.encrypt(&msg).unwrap();
-        let decipher_text = v.decrypt(&ciphertext).unwrap();
-        assert_eq!(msg.to_lowercase(), decipher_text);
+        #[test]
+        fn attack_at_dawn() {
+            let key = "LEMON";
+            let msg = "ATTACKATDAWN";
+            let v = Vignere::new(&key).unwrap();
+            let ciphertext = v.encrypt(&msg).unwrap();
+            assert_eq!(ciphertext, "lxfopvefrnhr");
+            let plaintext = v.decrypt(&ciphertext).unwrap();
+            assert_eq!(msg.to_lowercase(), plaintext);
+        }
+
+        #[test]
+        fn dont_tell_anyone() {
+            let key = "cat";
+            let msg = "donttellanyone";
+            let v = Vignere::new(&key).unwrap();
+            let ciphertext = v.encrypt(&msg).unwrap();
+            let plaintext = v.decrypt(&ciphertext).unwrap();
+            assert_eq!(msg, plaintext);
+        }
+
+        #[test]
+        fn really_long_text() {
+            let key = "secrets";
+            let msg = String::from("LoremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaborum").to_uppercase();
+            let v = Vignere::new(&key).unwrap();
+            let ciphertext = v.encrypt(&msg).unwrap();
+            let plaintext = v.decrypt(&ciphertext).unwrap();
+            assert_eq!(msg.to_lowercase(), plaintext);
+        }
+
+        #[test]
+        fn really_long_key() {
+            let key = "LoremipsummetconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaboru";
+            let msg = String::from("jpokmssrwjlazz").to_uppercase();
+            let v = Vignere::new(&key).unwrap();
+            let ciphertext = v.encrypt(&msg).unwrap();
+            let plaintext = v.decrypt(&ciphertext).unwrap();
+            assert_eq!(msg.to_lowercase(), plaintext);
+        }
+
+        #[test]
+        fn really_long_text_and_key() {
+            let key = "LoremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaborum";
+            let msg = String::from("rxfqgfmijapvfrahyvjbkrvrlngwdrqqsjzilbfdwhuhphtlphrbqsxaxsdivxmbhknvridnlxxvgorbhjaabdxcjridczqsumctefntukkvsjvmbikplirqtresjtyvhtkytcjzmcvcwbyufbmnwmrxzviyyjjxvecqpqkrzxnigycqjjvbxdmeqdjpipvdzcgeyenopfpnzsxzkhtdnlctonqlellwdhpsijfrukoqcrkxmwjpokmssrwjlazz").to_uppercase();
+            let v = Vignere::new(&key).unwrap();
+            let ciphertext = v.encrypt(&msg).unwrap();
+            let decipher_text = v.decrypt(&ciphertext).unwrap();
+            assert_eq!(msg.to_lowercase(), decipher_text);
+        }
     }
 }
