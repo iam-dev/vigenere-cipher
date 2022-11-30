@@ -107,7 +107,7 @@ pub mod vignere {
     }
 
     #[cfg(test)]
-    mod tests {
+    mod unit_tests {
         use super::*;
 
         #[test]
@@ -142,85 +142,91 @@ pub mod vignere {
             assert_eq!(generate_key("abc", 1), "a");
             assert_eq!(generate_key("abc", 0), "");
         }
+    }
+}
 
-        #[test]
-        // Key = cryptocryp
-        // Plaintext = helloworld
-        // Ciphertext = jvjahkqijs
-        // +-----+------+------+------+------+------+------+------+------+------+------+
-        // | Key | c=2  | r=17 | y=24 | p=15 | t=19 | o=14 | c=2  | r=17 | y=24 | p=15 |
-        // | PT  | h=7  | e=4  | l=11 | l=11 | o=14 | w=22 | o=14 | r=17 | l=11 | d=3  |
-        // | CT  | 9=j  | 21=v | 9=j  | 0=a  | 7=h  | 10=k | 16=q | 8=i  | 9=j  | 18=s |
-        // +-----+------+------+------+------+------+------+------+------+------+------+
-        // 2 + 7 mod 26 = 9
-        // 17 + 4 mod 26 = 21
-        // 24 + 11 mod 26 = 9
-        // 15 + 11 mod 26 = 0
-        // 19 + 14 mod 26 = 7
-        // 14 + 22 mod 26 = 10
-        // 2 + 14 mod 26 = 16
-        // 17 + 17 mod 26 = 8
-        // 24 + 11 mod 26 = 9
-        // 15 + 3 mod 26 = 18
-        fn hello_world() {
-            let key = "CRYPTO";
-            let msg = "HELLOWORLD";
-            let v = Vignere::new(&key).unwrap();
-            let ciphertext = v.encrypt(&msg).unwrap();
-            assert_eq!(ciphertext, "jvjahkqijs");
-            let plaintext = v.decrypt(&ciphertext).unwrap();
-            assert_eq!(msg.to_lowercase(), plaintext);
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::vignere::Vignere;
 
-        #[test]
-        fn attack_at_dawn() {
-            let key = "LEMON";
-            let msg = "ATTACKATDAWN";
-            let v = Vignere::new(&key).unwrap();
-            let ciphertext = v.encrypt(&msg).unwrap();
-            assert_eq!(ciphertext, "lxfopvefrnhr");
-            let plaintext = v.decrypt(&ciphertext).unwrap();
-            assert_eq!(msg.to_lowercase(), plaintext);
-        }
+    #[test]
+    // Key = cryptocryp
+    // Plaintext = helloworld
+    // Ciphertext = jvjahkqijs
+    // +-----+------+------+------+------+------+------+------+------+------+------+
+    // | Key | c=2  | r=17 | y=24 | p=15 | t=19 | o=14 | c=2  | r=17 | y=24 | p=15 |
+    // | PT  | h=7  | e=4  | l=11 | l=11 | o=14 | w=22 | o=14 | r=17 | l=11 | d=3  |
+    // | CT  | 9=j  | 21=v | 9=j  | 0=a  | 7=h  | 10=k | 16=q | 8=i  | 9=j  | 18=s |
+    // +-----+------+------+------+------+------+------+------+------+------+------+
+    // 2 + 7 mod 26 = 9
+    // 17 + 4 mod 26 = 21
+    // 24 + 11 mod 26 = 9
+    // 15 + 11 mod 26 = 0
+    // 19 + 14 mod 26 = 7
+    // 14 + 22 mod 26 = 10
+    // 2 + 14 mod 26 = 16
+    // 17 + 17 mod 26 = 8
+    // 24 + 11 mod 26 = 9
+    // 15 + 3 mod 26 = 18
+    fn hello_world() {
+        let key = "CRYPTO";
+        let msg = "HELLOWORLD";
+        let v = Vignere::new(&key).unwrap();
+        let ciphertext = v.encrypt(&msg).unwrap();
+        assert_eq!(ciphertext, "jvjahkqijs");
+        let plaintext = v.decrypt(&ciphertext).unwrap();
+        assert_eq!(msg.to_lowercase(), plaintext);
+    }
 
-        #[test]
-        fn dont_tell_anyone() {
-            let key = "cat";
-            let msg = "donttellanyone";
-            let v = Vignere::new(&key).unwrap();
-            let ciphertext = v.encrypt(&msg).unwrap();
-            let plaintext = v.decrypt(&ciphertext).unwrap();
-            assert_eq!(msg, plaintext);
-        }
+    #[test]
+    fn attack_at_dawn() {
+        let key = "LEMON";
+        let msg = "ATTACKATDAWN";
+        let v = Vignere::new(&key).unwrap();
+        let ciphertext = v.encrypt(&msg).unwrap();
+        assert_eq!(ciphertext, "lxfopvefrnhr");
+        let plaintext = v.decrypt(&ciphertext).unwrap();
+        assert_eq!(msg.to_lowercase(), plaintext);
+    }
 
-        #[test]
-        fn really_long_text() {
-            let key = "secrets";
-            let msg = String::from("LoremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaborum").to_uppercase();
-            let v = Vignere::new(&key).unwrap();
-            let ciphertext = v.encrypt(&msg).unwrap();
-            let plaintext = v.decrypt(&ciphertext).unwrap();
-            assert_eq!(msg.to_lowercase(), plaintext);
-        }
+    #[test]
+    fn dont_tell_anyone() {
+        let key = "cat";
+        let msg = "donttellanyone";
+        let v = Vignere::new(&key).unwrap();
+        let ciphertext = v.encrypt(&msg).unwrap();
+        let plaintext = v.decrypt(&ciphertext).unwrap();
+        assert_eq!(msg, plaintext);
+    }
 
-        #[test]
-        fn really_long_key() {
-            let key = "LoremipsummetconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaboru";
-            let msg = String::from("jpokmssrwjlazz").to_uppercase();
-            let v = Vignere::new(&key).unwrap();
-            let ciphertext = v.encrypt(&msg).unwrap();
-            let plaintext = v.decrypt(&ciphertext).unwrap();
-            assert_eq!(msg.to_lowercase(), plaintext);
-        }
+    #[test]
+    fn really_long_text() {
+        let key = "secrets";
+        let msg = String::from("LoremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaborum").to_uppercase();
+        let v = Vignere::new(&key).unwrap();
+        let ciphertext = v.encrypt(&msg).unwrap();
+        let plaintext = v.decrypt(&ciphertext).unwrap();
+        assert_eq!(msg.to_lowercase(), plaintext);
+    }
 
-        #[test]
-        fn really_long_text_and_key() {
-            let key = "LoremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaborum";
-            let msg = String::from("rxfqgfmijapvfrahyvjbkrvrlngwdrqqsjzilbfdwhuhphtlphrbqsxaxsdivxmbhknvridnlxxvgorbhjaabdxcjridczqsumctefntukkvsjvmbikplirqtresjtyvhtkytcjzmcvcwbyufbmnwmrxzviyyjjxvecqpqkrzxnigycqjjvbxdmeqdjpipvdzcgeyenopfpnzsxzkhtdnlctonqlellwdhpsijfrukoqcrkxmwjpokmssrwjlazz").to_uppercase();
-            let v = Vignere::new(&key).unwrap();
-            let ciphertext = v.encrypt(&msg).unwrap();
-            let decipher_text = v.decrypt(&ciphertext).unwrap();
-            assert_eq!(msg.to_lowercase(), decipher_text);
-        }
+    #[test]
+    fn really_long_key() {
+        let key = "LoremipsummetconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaboru";
+        let msg = String::from("jpokmssrwjlazz").to_uppercase();
+        let v = Vignere::new(&key).unwrap();
+        let ciphertext = v.encrypt(&msg).unwrap();
+        let plaintext = v.decrypt(&ciphertext).unwrap();
+        assert_eq!(msg.to_lowercase(), plaintext);
+    }
+
+    #[test]
+    fn really_long_text_and_key() {
+        let key = "LoremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliquaUtenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequatDuisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariaturExcepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaborum";
+        let msg = String::from("rxfqgfmijapvfrahyvjbkrvrlngwdrqqsjzilbfdwhuhphtlphrbqsxaxsdivxmbhknvridnlxxvgorbhjaabdxcjridczqsumctefntukkvsjvmbikplirqtresjtyvhtkytcjzmcvcwbyufbmnwmrxzviyyjjxvecqpqkrzxnigycqjjvbxdmeqdjpipvdzcgeyenopfpnzsxzkhtdnlctonqlellwdhpsijfrukoqcrkxmwjpokmssrwjlazz").to_uppercase();
+        let v = Vignere::new(&key).unwrap();
+        let ciphertext = v.encrypt(&msg).unwrap();
+        let decipher_text = v.decrypt(&ciphertext).unwrap();
+        assert_eq!(msg.to_lowercase(), decipher_text);
     }
 }
