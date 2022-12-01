@@ -1,4 +1,3 @@
-// REF FROM https://github.com/fbielejec/CryptographyEngineering/blob/master/study-group-hw/vigenere/src/lib.rs
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
