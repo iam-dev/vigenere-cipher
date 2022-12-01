@@ -28,5 +28,5 @@ to test the cipher.
 cargo bench
 ```
 
-to test the performance of the lib
+to test the performance of vignere
 
